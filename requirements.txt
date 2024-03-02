@@ -1,4 +1,5 @@
 langchain
+langchainhub
 langchain-openai
 langchain-pinecone
 langchain-community
