@@ -50,8 +50,14 @@ def get_rag_with_sources(query):
 
     response = rag_chain_with_source.invoke(query)
 
-    print(response)
-    return response
+    context = response["context"]
+    answer = response["answer"]
+
+    urls = [cnt.metadata["url"] for cnt in context]
+
+    print(urls)
+    # print(context)
+    return answer, urls
 
 
 if __name__ == "__main__":

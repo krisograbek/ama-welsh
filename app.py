@@ -21,10 +21,17 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
     # Generate and display response
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        # Assuming agent_executor can handle session_state.messages format or adapt as needed
-        # response = get_rag_response(user_prompt)
-        response = get_rag_with_sources(user_prompt)
-        message_placeholder.markdown(str(response))
+        response, urls = get_rag_with_sources(user_prompt)
+        # Create a markdown string with clickable URLs
+        urls_markdown = "".join(
+            [
+                f'<a href="{url}" target="_blank" style="display: inline-block; margin: 2px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">{url}</a><br>'
+                for url in urls
+            ]
+        )
+        markdown_content = f"{response}<br><br>{urls_markdown}"
+
+        message_placeholder.markdown(markdown_content, unsafe_allow_html=True)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
 
