@@ -2,7 +2,7 @@ import streamlit as st
 from lc_helpers import get_rag_response, get_rag_with_sources
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # for LangSmith
 
 # Set up the Streamlit page
 st.set_page_config(page_title="Justin Welsh AI")

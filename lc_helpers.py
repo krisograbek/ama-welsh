@@ -49,6 +49,7 @@ def get_rag_with_sources(query):
     ).assign(answer=rag_chain_from_docs)
 
     response = rag_chain_with_source.invoke(query)
+
     print(response)
     return response
 
