@@ -1,8 +1,9 @@
 import html
 import streamlit as st
 
-# from lc_helpers import get_rag_response, get_rag_with_sources
-from lc_helpers_custom_prompt import get_rag_with_sources
+from lc_helpers import get_rag_with_sources
+
+# from lc_helpers_hub import get_rag_with_sources
 from dotenv import load_dotenv
 
 load_dotenv()  # for LangSmith
@@ -45,7 +46,10 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
         # Generate HTML for the URLs and display them in a separate markdown call
         urls_markdown = generate_links_html(urls_and_titles)
         # print(urls_markdown)
-        st.markdown(urls_markdown, unsafe_allow_html=True)
+        st.markdown(
+            f"For more details, check them out:<br/> {urls_markdown}",
+            unsafe_allow_html=True,
+        )
 
     # st.session_state.messages.append({"role": "assistant", "content": response})
 

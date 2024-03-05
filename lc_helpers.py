@@ -11,21 +11,42 @@ load_dotenv()
 
 index_name = "welsh-full"
 embeddings = OpenAIEmbeddings()
-llm = ChatOpenAI()
 
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
 # Retrieve and generate using the relevant snippets of the blog.
 retriever = vectorstore.as_retriever()
 
-template = """Answer the question based only on the following context:
+template = """You are an assistant for question-answering tasks. \
+Use the following pieces of retrieved context (delimited by XML tags) to answer the question. \
+<context>
 {context}
+</context>
 
 Question: {question}
+
+If the provided context doesn't include the answer to the question, just say that you don't know. \
+Do not force answering the question. \
+
+When possible, extract actionable tips from the context. \
+
+--
+When you answer the question, use the following structure: \
+
+**Overview**: <Quick overview here> \
+**Key points**: <key elements (e.g. tips, mistakes, lessons, etc) of the answer in bullet points here> \
+
+**Actionable Tips**: <actionable tips here> \
+
+--
+Your writing style and language must be the same as in the provided context.
+Use simple and direct language.
+
 """
+
 prompt = ChatPromptTemplate.from_template(template)
 
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+llm = ChatOpenAI(model_name="gpt-4-0125-preview", temperature=0.1)
 
 
 def format_docs(docs):
@@ -57,4 +78,4 @@ def get_rag_with_sources(query):
 
 
 if __name__ == "__main__":
-    print(get_rag_response("How to bake an apple pie?"))
+    print(get_rag_with_sources("How to bake an apple pie?"))
