@@ -1,18 +1,17 @@
-from dotenv import load_dotenv
+import streamlit as st
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from langchain import hub
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough, RunnableParallel
+from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
-
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 
 index_name = "welsh-full"
 embeddings = OpenAIEmbeddings()
-model_name = "gpt-3.5-turbo"
-# model_name="gpt-4-0125-preview"
+# model_name = "gpt-3.5-turbo"
+model_name = "gpt-4-0125-preview"
 
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
@@ -52,10 +51,12 @@ llm = ChatOpenAI(model_name=model_name, temperature=0.1)
 
 
 def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
+    # Assuming 'format_docs' formats the documents for the context,
+    # You might need to adapt this function based on how you intend to format your documents.
+    return " ".join([doc.page_content for doc in docs])
 
 
-def get_rag_with_sources(query):
+def get_advanced_response(question, retriever, llm):
     rag_chain_from_docs = (
         RunnablePassthrough.assign(context=(lambda x: format_docs(x["context"])))
         | prompt
@@ -67,21 +68,22 @@ def get_rag_with_sources(query):
         {"context": retriever, "question": RunnablePassthrough()}
     ).assign(answer=rag_chain_from_docs)
 
-    # normal response
-    # response = rag_chain_with_source.invoke(query)
-    # streaming
-    return rag_chain_with_source.stream(query)
-    # print(chunk)
-
-    # context = response["context"]
-    # answer = response["answer"]
-
-    # urls = [(cnt.metadata["url"], cnt.metadata["header"]) for cnt in context]
-
-    # # print(urls)
-    # # print(context)
-    # return answer, urls
+    # Streaming only "answer" content
+    output = ""
+    for chunk in rag_chain_with_source.stream(question):
+        if "answer" in chunk:
+            output += chunk["answer"]
+            yield chunk["answer"]
+    yield output  # At the end, yield the full accumulated answer
 
 
-if __name__ == "__main__":
-    print(get_rag_with_sources("How to bake an apple pie?"))
+user_query = st.text_input("Type your question here...")
+if user_query:
+    # response_generator = get_advanced_response(user_query, retriever, llm)
+    # full_response = ""
+    # for part_of_response in response_generator:
+    #     if part_of_response:  # This checks if the response part is not empty
+    #         full_response += part_of_response  # Accumulate the response parts
+
+    with st.chat_message("assistant"):
+        st.write_stream(get_advanced_response(user_query, retriever, llm))
