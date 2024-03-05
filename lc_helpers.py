@@ -53,9 +53,9 @@ def get_rag_with_sources(query):
     context = response["context"]
     answer = response["answer"]
 
-    urls = [cnt.metadata["url"] for cnt in context]
+    urls = [(cnt.metadata["url"], cnt.metadata["header"]) for cnt in context]
 
-    print(urls)
+    # print(urls)
     # print(context)
     return answer, urls
 

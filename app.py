@@ -1,16 +1,34 @@
+import html
 import streamlit as st
 from lc_helpers import get_rag_response, get_rag_with_sources
 from dotenv import load_dotenv
 
 load_dotenv()  # for LangSmith
 
+
+def escape_dollars(title):
+    # Replace $ with \$ to escape Markdown interpretation for LaTeX
+    return title.replace("$", "\$")
+
+
+def generate_links_html(urls_and_titles):
+    link_template = '<a href="{url}" target="_blank" style="display: inline-block; margin: 2px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">{title}</a><br>'
+    links_html = "".join(
+        [
+            link_template.format(url=url, title=escape_dollars(html.escape(title)))
+            for url, title in urls_and_titles
+        ]
+    )
+    return links_html
+
+
 # Set up the Streamlit page
 st.set_page_config(page_title="Justin Welsh AI")
 st.title("Justin Welsh AI AMA 📈")
 
 # Initialize session state for messages if not already done
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# if "messages" not in st.session_state:
+#     st.session_state.messages = []
 
 if user_prompt := st.chat_input("Ask Justin AI..."):
     # st.session_state.messages.append({"role": "user", "content": user_prompt})
@@ -18,22 +36,16 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
-    # Generate and display response
     with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        response, urls = get_rag_with_sources(user_prompt)
-        # Create a markdown string with clickable URLs
-        urls_markdown = "".join(
-            [
-                f'<a href="{url}" target="_blank" style="display: inline-block; margin: 2px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">{url}</a><br>'
-                for url in urls
-            ]
-        )
-        markdown_content = f"{response}<br><br>{urls_markdown}"
+        response, urls_and_titles = get_rag_with_sources(user_prompt)
+        # Display the response
+        st.markdown(response)
+        # Generate HTML for the URLs and display them in a separate markdown call
+        urls_markdown = generate_links_html(urls_and_titles)
+        # print(urls_markdown)
+        st.markdown(urls_markdown, unsafe_allow_html=True)
 
-        message_placeholder.markdown(markdown_content, unsafe_allow_html=True)
-
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    # st.session_state.messages.append({"role": "assistant", "content": response})
 
 
 # else:
