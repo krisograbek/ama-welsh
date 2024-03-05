@@ -1,6 +1,8 @@
 import html
 import streamlit as st
-from lc_helpers import get_rag_response, get_rag_with_sources
+
+# from lc_helpers import get_rag_response, get_rag_with_sources
+from lc_helpers_custom_prompt import get_rag_with_sources
 from dotenv import load_dotenv
 
 load_dotenv()  # for LangSmith

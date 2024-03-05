@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain import hub
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
@@ -17,19 +16,24 @@ vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
 # Retrieve and generate using the relevant snippets of the blog.
 retriever = vectorstore.as_retriever()
-
-template = """Answer the question based only on the following context:
-{context}
-
-Question: {question}
-"""
-prompt = ChatPromptTemplate.from_template(template)
-
+prompt = hub.pull("rlm/rag-prompt")
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
+
+
+def get_rag_response(query):
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    response = rag_chain.invoke(query)
+    return response
 
 
 def get_rag_with_sources(query):
