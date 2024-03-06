@@ -15,19 +15,41 @@ def escape_dollars(title):
 
 
 def generate_links_html(urls_and_titles):
-    link_template = '<a href="{url}" target="_blank" style="display: inline-block; margin: 2px; padding: 2px; border: 1px solid #ccc; border-radius: 4px;">{title}</a><br>'
+    # CSS styles
+    styles = """
+    <style>
+    .link-box {
+        display: inline-block;
+        margin: 5px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f0f0f0;
+        font-size: 16px;
+    }
+    </style>
+    """
+
+    # HTML template using the class for styling
+    link_template = '<a href="{url}" target="_blank" class="link-box">{title}</a><br>'
+
+    # Generating the links HTML
     links_html = "".join(
         [
             link_template.format(url=url, title=escape_dollars(html.escape(title)))
             for url, title in urls_and_titles
         ]
     )
-    return links_html
+
+    # Combining styles with the links HTML
+    full_html = styles + links_html
+    return full_html
 
 
 # Set up the Streamlit page
 st.set_page_config(page_title="Justin Welsh AI")
-st.title("Justin Welsh AI AMA 📈")
+st.title("Chat with Justin Welsh AI")
+st.subheader("Trained on Saturday Solopreneur Newsletter")
 
 # Initialize session state for messages if not already done
 # if "messages" not in st.session_state:
@@ -40,19 +62,20 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
         st.markdown(user_prompt)
 
     with st.chat_message("assistant"):
-        response, urls_and_titles = get_rag_with_sources(user_prompt)
-        # Display the response
-        st.markdown(response)
-        # Generate HTML for the URLs and display them in a separate markdown call
-        urls_markdown = generate_links_html(urls_and_titles)
-        # print(urls_markdown)
-        st.markdown(
-            f"For more details, check them out:<br/> {urls_markdown}",
-            unsafe_allow_html=True,
-        )
+        links_placeholder = st.empty()
+        answer_placeholder = st.empty()
+        full_response = ""
 
-    # st.session_state.messages.append({"role": "assistant", "content": response})
+        for content_type, content in get_rag_with_sources(user_prompt):
+            if content_type == "metadata":
+                urls_markdown = generate_links_html(content)
+                links_placeholder.markdown(
+                    f"Newsletter issues found: <br/>{urls_markdown}",
+                    unsafe_allow_html=True,
+                )
 
+            if content_type == "answer":
+                full_response += content
+                answer_placeholder.markdown(full_response + "▌")
 
-# else:
-#     st.write("Please upload a CSV file to proceed.")
+        answer_placeholder.markdown(full_response)

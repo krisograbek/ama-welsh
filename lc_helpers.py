@@ -11,8 +11,8 @@ load_dotenv()
 
 index_name = "welsh-full"
 embeddings = OpenAIEmbeddings()
-model_name = "gpt-3.5-turbo"
-# model_name="gpt-4-0125-preview"
+# model_name = "gpt-3.5-turbo"
+model_name = "gpt-4-0125-preview"
 
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
@@ -68,16 +68,21 @@ def get_rag_with_sources(query):
     ).assign(answer=rag_chain_from_docs)
 
     # normal response
-    response = rag_chain_with_source.invoke(query)
+    # response = rag_chain_with_source.invoke(query)
 
-    context = response["context"]
-    answer = response["answer"]
+    for chunk in rag_chain_with_source.stream(query):
+        # streaming metadata (urls)
+        if "context" in chunk:
+            urls = [
+                (cnt.metadata["url"], cnt.metadata["header"])
+                for cnt in chunk["context"]
+            ]
+            yield "metadata", urls
 
-    urls = [(cnt.metadata["url"], cnt.metadata["header"]) for cnt in context]
-
-    # # print(urls)
-    # # print(context)
-    return answer, urls
+        # Streaming only "answer" content
+        if "answer" in chunk:
+            # output += chunk["answer"]
+            yield "answer", chunk["answer"]
 
 
 if __name__ == "__main__":
