@@ -70,7 +70,7 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
             if content_type == "metadata":
                 urls_markdown = generate_links_html(content)
                 links_placeholder.markdown(
-                    f"Newsletter issues found: <br/>{urls_markdown}",
+                    f"Related issues: <br/>{urls_markdown}",
                     unsafe_allow_html=True,
                 )
 
