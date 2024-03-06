@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -10,8 +11,8 @@ load_dotenv()
 
 index_name = "welsh-full"
 embeddings = OpenAIEmbeddings()
-# model_name = "gpt-3.5-turbo"
-model_name = "gpt-4-0125-preview"
+model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4-0125-preview"
 
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
@@ -50,6 +51,43 @@ prompt = ChatPromptTemplate.from_template(template)
 llm = ChatOpenAI(model_name=model_name, temperature=0.1)
 
 
+def escape_dollars(title):
+    # Replace $ with \$ to escape Markdown interpretation for LaTeX
+    return title.replace("$", "\$")
+
+
+def generate_links_html(urls_and_titles):
+    # CSS styles
+    styles = """
+    <style>
+    .link-box {
+        display: inline-block;
+        margin: 5px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f0f0f0;
+        font-size: 16px;
+    }
+    </style>
+    """
+
+    # HTML template using the class for styling
+    link_template = '<a href="{url}" target="_blank" class="link-box">{title}</a><br>'
+
+    # Generating the links HTML
+    links_html = "".join(
+        [
+            link_template.format(url=url, title=escape_dollars(html.escape(title)))
+            for url, title in urls_and_titles
+        ]
+    )
+
+    # Combining styles with the links HTML
+    full_html = styles + links_html
+    return full_html
+
+
 def format_docs(docs):
     # Assuming 'format_docs' formats the documents for the context,
     # You might need to adapt this function based on how you intend to format your documents.
@@ -76,16 +114,32 @@ def get_advanced_response(question, retriever, llm):
                 (cnt.metadata["url"], cnt.metadata["header"])
                 for cnt in chunk["context"]
             ]
-            yield urls
+            yield "metadata", urls
 
         # Streaming only "answer" content
         if "answer" in chunk:
             # output += chunk["answer"]
-            yield chunk["answer"]
+            yield "answer", chunk["answer"]
     # yield "answer", output  # At the end, yield the full accumulated answer
 
 
 user_query = st.text_input("Type your question here...")
 if user_query:
     with st.chat_message("assistant"):
-        st.write_stream(get_advanced_response(user_query, retriever, llm))
+
+        links_placeholder = st.empty()
+        answer_placeholder = st.empty()
+        full_response = ""
+
+        for content_type, content in get_advanced_response(user_query, retriever, llm):
+            if content_type == "metadata":
+                urls_markdown = generate_links_html(content)
+                links_placeholder.markdown(
+                    f"Sources found: <br/>{urls_markdown}", unsafe_allow_html=True
+                )
+
+            if content_type == "answer":
+                full_response += content
+                answer_placeholder.markdown(full_response + "▌")
+
+        answer_placeholder.markdown(full_response)

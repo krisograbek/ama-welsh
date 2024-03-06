@@ -68,19 +68,16 @@ def get_rag_with_sources(query):
     ).assign(answer=rag_chain_from_docs)
 
     # normal response
-    # response = rag_chain_with_source.invoke(query)
-    # streaming
-    return rag_chain_with_source.stream(query)
-    # print(chunk)
+    response = rag_chain_with_source.invoke(query)
 
-    # context = response["context"]
-    # answer = response["answer"]
+    context = response["context"]
+    answer = response["answer"]
 
-    # urls = [(cnt.metadata["url"], cnt.metadata["header"]) for cnt in context]
+    urls = [(cnt.metadata["url"], cnt.metadata["header"]) for cnt in context]
 
     # # print(urls)
     # # print(context)
-    # return answer, urls
+    return answer, urls
 
 
 if __name__ == "__main__":
