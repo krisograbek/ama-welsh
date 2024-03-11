@@ -1,7 +1,7 @@
 import html
 import streamlit as st
 
-from lc_helpers import get_rag_with_sources
+from lc_helpers_no_key import get_rag_with_sources, initialize_components
 
 # from lc_helpers_hub import get_rag_with_sources
 from dotenv import load_dotenv
@@ -55,6 +55,8 @@ with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", type="password")
 
 if openai_api_key:
+    retriever = initialize_components(openai_api_key)
+
     if user_prompt := st.chat_input("Ask Justin AI..."):
         # st.session_state.messages.append({"role": "user", "content": user_prompt})
 
@@ -66,7 +68,9 @@ if openai_api_key:
             answer_placeholder = st.empty()
             full_response = ""
 
-            for content_type, content in get_rag_with_sources(user_prompt, model=4):
+            for content_type, content in get_rag_with_sources(
+                user_prompt, 4, retriever=retriever
+            ):
                 if content_type == "metadata":
                     urls_markdown = generate_links_html(content)
                     links_placeholder.markdown(
