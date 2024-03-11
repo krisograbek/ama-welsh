@@ -17,7 +17,7 @@ model_name = "gpt-4-0125-preview"
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
 # Retrieve and generate using the relevant snippets of the blog.
-retriever = vectorstore.as_retriever()
+retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
 
 template = """You are an assistant for question-answering tasks. \
 Use the following pieces of retrieved context (delimited by XML tags) to answer the question. \
@@ -66,9 +66,6 @@ def get_rag_with_sources(query):
     rag_chain_with_source = RunnableParallel(
         {"context": retriever, "question": RunnablePassthrough()}
     ).assign(answer=rag_chain_from_docs)
-
-    # normal response
-    # response = rag_chain_with_source.invoke(query)
 
     for chunk in rag_chain_with_source.stream(query):
         # streaming metadata (urls)
