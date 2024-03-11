@@ -51,31 +51,31 @@ st.set_page_config(page_title="Justin Welsh AI")
 st.title("Chat with Justin Welsh AI")
 st.subheader("Trained on Saturday Solopreneur Newsletter")
 
-with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", type="password")
+# Initialize session state for messages if not already done
+# if "messages" not in st.session_state:
+#     st.session_state.messages = []
 
-if openai_api_key:
-    if user_prompt := st.chat_input("Ask Justin AI..."):
-        # st.session_state.messages.append({"role": "user", "content": user_prompt})
+if user_prompt := st.chat_input("Ask Justin AI..."):
+    # st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
+    with st.chat_message("user"):
+        st.markdown(user_prompt)
 
-        with st.chat_message("assistant"):
-            links_placeholder = st.empty()
-            answer_placeholder = st.empty()
-            full_response = ""
+    with st.chat_message("assistant"):
+        links_placeholder = st.empty()
+        answer_placeholder = st.empty()
+        full_response = ""
 
-            for content_type, content in get_rag_with_sources(user_prompt, model=4):
-                if content_type == "metadata":
-                    urls_markdown = generate_links_html(content)
-                    links_placeholder.markdown(
-                        f"Related issues: <br/>{urls_markdown}",
-                        unsafe_allow_html=True,
-                    )
+        for content_type, content in get_rag_with_sources(user_prompt):
+            if content_type == "metadata":
+                urls_markdown = generate_links_html(content)
+                links_placeholder.markdown(
+                    f"Related issues: <br/>{urls_markdown}",
+                    unsafe_allow_html=True,
+                )
 
-                if content_type == "answer":
-                    full_response += content
-                    answer_placeholder.markdown(full_response + "▌")
+            if content_type == "answer":
+                full_response += content
+                answer_placeholder.markdown(full_response + "▌")
 
         answer_placeholder.markdown(full_response)

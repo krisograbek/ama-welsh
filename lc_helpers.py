@@ -11,8 +11,6 @@ load_dotenv()
 
 index_name = "welsh-full"
 embeddings = OpenAIEmbeddings()
-# model_name = "gpt-3.5-turbo"
-model_name = "gpt-4-0125-preview"
 
 vectorstore = PineconeVectorStore.from_existing_index(index_name, embeddings)
 
@@ -48,14 +46,14 @@ Use simple and direct language.
 
 prompt = ChatPromptTemplate.from_template(template)
 
-llm = ChatOpenAI(model_name=model_name, temperature=0.1)
-
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def get_rag_with_sources(query):
+def get_rag_with_sources(query, model=3):
+    model_name = "gpt-3.5-turbo" if model == 3 else "gpt-4-0125-preview"
+    llm = ChatOpenAI(model_name=model_name, temperature=0.1)
     rag_chain_from_docs = (
         RunnablePassthrough.assign(context=(lambda x: format_docs(x["context"])))
         | prompt

@@ -66,7 +66,7 @@ if user_prompt := st.chat_input("Ask Justin AI..."):
         answer_placeholder = st.empty()
         full_response = ""
 
-        for content_type, content in get_rag_with_sources(user_prompt):
+        for content_type, content in get_rag_with_sources(user_prompt, model=4):
             if content_type == "metadata":
                 urls_markdown = generate_links_html(content)
                 links_placeholder.markdown(
