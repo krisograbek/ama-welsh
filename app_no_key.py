@@ -69,7 +69,7 @@ if openai_api_key:
             full_response = ""
 
             for content_type, content in get_rag_with_sources(
-                user_prompt, 4, retriever=retriever
+                user_prompt, 4, openai_api_key, retriever=retriever
             ):
                 if content_type == "metadata":
                     urls_markdown = generate_links_html(content)

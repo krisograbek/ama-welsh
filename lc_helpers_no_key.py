@@ -56,9 +56,9 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def get_rag_with_sources(query, model, retriever=None):
+def get_rag_with_sources(query, model, openai_api_key, retriever=None):
     model_name = "gpt-3.5-turbo" if model == 3 else "gpt-4-0125-preview"
-    llm = ChatOpenAI(model_name=model_name, temperature=0.1)
+    llm = ChatOpenAI(model_name=model_name, temperature=0.1, api_key=openai_api_key)
     rag_chain_from_docs = (
         RunnablePassthrough.assign(context=(lambda x: format_docs(x["context"])))
         | prompt
